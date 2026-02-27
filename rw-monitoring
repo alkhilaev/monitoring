@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+VERSION="1.0.0"
+INSTALL_DIR="/opt/remnawave/monitoring"
+LOG_DIR="/opt/remnawave/logs"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+info()  { echo -e "${CYAN}[INFO]${NC} $*"; }
+ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
+error() { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
+
+# Determine compose command
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+elif command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+else
+    COMPOSE_CMD="docker compose"
+fi
+
+usage() {
+    echo "Remnawave Monitoring v${VERSION}"
+    echo ""
+    echo "Использование: rw-monitoring <команда>"
+    echo ""
+    echo "Команды:"
+    echo "  status      Статус сервисов"
+    echo "  up          Запустить стек"
+    echo "  down        Остановить стек"
+    echo "  restart     Перезапустить стек"
+    echo "  update      Обновить до последней версии"
+    echo "  sync        Ручная синхронизация нод"
+    echo "  logs        Логи синхронизации"
+    echo "  uninstall   Удалить мониторинг"
+    echo "  --version   Показать версию"
+}
+
+cmd_status() {
+    cd "$INSTALL_DIR"
+    $COMPOSE_CMD ps
+}
+
+cmd_up() {
+    cd "$INSTALL_DIR"
+    $COMPOSE_CMD up -d
+    ok "Стек запущен"
+}
+
+cmd_down() {
+    cd "$INSTALL_DIR"
+    $COMPOSE_CMD down
+    ok "Стек остановлен"
+}
+
+cmd_restart() {
+    cd "$INSTALL_DIR"
+    $COMPOSE_CMD restart
+    ok "Стек перезапущен"
+}
+
+cmd_update() {
+    info "Обновление..."
+    bash <(curl -sSL https://raw.githubusercontent.com/alkhilaev/monitoring/main/setup.sh)
+}
+
+cmd_sync() {
+    cd "$INSTALL_DIR"
+    python3 sync-nodes.py
+}
+
+cmd_logs() {
+    local log_file="${LOG_DIR}/sync-nodes.log"
+    if [ -f "$log_file" ]; then
+        tail -n 50 "$log_file"
+    else
+        warn "Лог-файл не найден: ${log_file}"
+    fi
+}
+
+cmd_uninstall() {
+    bash "${INSTALL_DIR}/uninstall.sh"
+}
+
+# ─── Main ─────────────────────────────────────────────────────────────────────
+case "${1:-}" in
+    status)     cmd_status ;;
+    up|start)   cmd_up ;;
+    down|stop)  cmd_down ;;
+    restart)    cmd_restart ;;
+    update)     cmd_update ;;
+    sync)       cmd_sync ;;
+    logs)       cmd_logs ;;
+    uninstall)  cmd_uninstall ;;
+    --version|-v) echo "Remnawave Monitoring v${VERSION}" ;;
+    *)          usage ;;
+esac

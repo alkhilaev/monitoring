@@ -173,7 +173,7 @@ mkdir -p "$LOG_DIR"
 
 download_files() {
     local base="https://raw.githubusercontent.com/alkhilaev/monitoring/${REPO_BRANCH}"
-    local files="docker-compose.yml prometheus.yml sync-nodes.py whitebox-sd-config.yml whitebox.yml .env.example setup.sh uninstall.sh"
+    local files="docker-compose.yml prometheus.yml sync-nodes.py whitebox-sd-config.yml whitebox.yml .env.example setup.sh uninstall.sh rw-monitoring"
     for f in $files; do
         curl -sSL "${base}/${f}" -o "${INSTALL_DIR}/${f}" || error "Failed to download ${f}"
     done
@@ -192,6 +192,12 @@ else
     info "git not found, downloading files via curl..."
     download_files
 fi
+
+# ─── Install CLI command ─────────────────────────────────────────────────────
+info "Installing rw-monitoring command..."
+cp "${INSTALL_DIR}/rw-monitoring" /usr/local/bin/rw-monitoring
+chmod +x /usr/local/bin/rw-monitoring
+ok "Command 'rw-monitoring' installed"
 
 # ─── Create .env ──────────────────────────────────────────────────────────────
 if [ "$UPGRADE" = true ]; then
@@ -309,8 +315,13 @@ echo ""
 echo "  Install dir: ${INSTALL_DIR}"
 echo "  Logs:        ${LOG_DIR}/sync-nodes.log"
 echo ""
-echo "  Services are bound to 127.0.0.1 only."
-echo "  Use a reverse proxy for external access."
+echo "  Управление:   rw-monitoring <команда>"
+echo "    status   — статус сервисов"
+echo "    restart  — перезапуск"
+echo "    update   — обновление"
+echo "    logs     — логи синхронизации"
+echo "    sync     — ручная синхронизация нод"
 echo ""
-echo "  To uninstall: bash ${INSTALL_DIR}/uninstall.sh"
+echo "  Сервисы слушают только на 127.0.0.1."
+echo "  Для внешнего доступа используйте reverse proxy."
 echo ""
