@@ -29,6 +29,9 @@ def load_env_file():
             key, _, value = line.partition("=")
             key = key.strip()
             value = value.strip()
+            # Strip surrounding quotes (single or double)
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+                value = value[1:-1]
             # Don't override already-set environment variables
             if key and key not in os.environ:
                 os.environ[key] = value

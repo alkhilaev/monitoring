@@ -218,29 +218,31 @@ ok "Command 'rw-monitoring' installed"
 if [ "$UPGRADE" = true ]; then
     ok "Keeping existing .env file"
     # Read COMPOSE_PROFILES from existing .env to determine what's enabled
-    COMPOSE_PROFILES=$(grep -E '^COMPOSE_PROFILES=' "${INSTALL_DIR}/.env" 2>/dev/null | cut -d= -f2- || true)
+    # Helper: read value from .env, strip surrounding quotes
+    env_val() { grep -E "^${1}=" "${INSTALL_DIR}/.env" 2>/dev/null | cut -d= -f2- | sed "s/^['\"]//;s/['\"]$//" || echo "${2:-}"; }
+    COMPOSE_PROFILES=$(env_val COMPOSE_PROFILES)
     if [[ "$COMPOSE_PROFILES" == *"whitebox"* ]]; then INSTALL_WHITEBOX=true; fi
     if [[ "$COMPOSE_PROFILES" == *"xray-checker"* ]]; then
         INSTALL_XRAY_CHECKER=true
-        XRAY_CHECKER_USER=$(grep -E '^XRAY_CHECKER_USER=' "${INSTALL_DIR}/.env" 2>/dev/null | cut -d= -f2- || echo "admin")
-        XRAY_CHECKER_PASSWORD=$(grep -E '^XRAY_CHECKER_PASSWORD=' "${INSTALL_DIR}/.env" 2>/dev/null | cut -d= -f2- || echo "changeme")
+        XRAY_CHECKER_USER=$(env_val XRAY_CHECKER_USER admin)
+        XRAY_CHECKER_PASSWORD=$(env_val XRAY_CHECKER_PASSWORD changeme)
     fi
 else
     info "Creating .env file..."
 
     cat > "${INSTALL_DIR}/.env" <<EOF
-REMNAWAVE_API_URL=${REMNAWAVE_API_URL}
-REMNAWAVE_API_TOKEN=${REMNAWAVE_API_TOKEN}
-GRAFANA_ADMIN_USER=${GRAFANA_ADMIN_USER}
-GRAFANA_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
-COMPOSE_PROFILES=${COMPOSE_PROFILES}
+REMNAWAVE_API_URL='${REMNAWAVE_API_URL}'
+REMNAWAVE_API_TOKEN='${REMNAWAVE_API_TOKEN}'
+GRAFANA_ADMIN_USER='${GRAFANA_ADMIN_USER}'
+GRAFANA_ADMIN_PASSWORD='${GRAFANA_ADMIN_PASSWORD}'
+COMPOSE_PROFILES='${COMPOSE_PROFILES}'
 EOF
 
     if [ "$INSTALL_XRAY_CHECKER" = true ]; then
         cat >> "${INSTALL_DIR}/.env" <<EOF
-XRAY_CHECKER_SUBSCRIPTION_URL=${XRAY_CHECKER_SUBSCRIPTION_URL}
-XRAY_CHECKER_USER=${XRAY_CHECKER_USER}
-XRAY_CHECKER_PASSWORD=${XRAY_CHECKER_PASSWORD}
+XRAY_CHECKER_SUBSCRIPTION_URL='${XRAY_CHECKER_SUBSCRIPTION_URL}'
+XRAY_CHECKER_USER='${XRAY_CHECKER_USER}'
+XRAY_CHECKER_PASSWORD='${XRAY_CHECKER_PASSWORD}'
 EOF
     fi
 
