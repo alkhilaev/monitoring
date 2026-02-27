@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ─── Remnawave Monitoring — Installation Script ───────────────────────────────
-# Usage:
+# ─── Remnawave Monitoring — Скрипт установки ─────────────────────────────────
+# Использование:
 #   bash <(curl -sSL https://raw.githubusercontent.com/alkhilaev/monitoring/main/setup.sh)
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -18,57 +18,57 @@ if [[ "${1:-}" == "--version" || "${1:-}" == "-v" ]]; then
     exit 0
 fi
 
-# ─── Colors ───────────────────────────────────────────────────────────────────
+# ─── Цвета ───────────────────────────────────────────────────────────────────
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 info()  { echo -e "${CYAN}[INFO]${NC} $*"; }
 ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
 
-# ─── Check root ───────────────────────────────────────────────────────────────
+# ─── Проверка root ───────────────────────────────────────────────────────────
 if [ "$(id -u)" -ne 0 ]; then
-    error "This script must be run as root (use sudo)"
+    error "Скрипт должен запускаться от root (используйте sudo)"
 fi
 
-# ─── Check dependencies ──────────────────────────────────────────────────────
-info "Checking dependencies..."
+# ─── Проверка зависимостей ───────────────────────────────────────────────────
+info "Проверка зависимостей..."
 
-command -v docker >/dev/null 2>&1 || error "Docker is not installed. Please install Docker first: https://docs.docker.com/engine/install/"
+command -v docker >/dev/null 2>&1 || error "Docker не установлен. Установите: https://docs.docker.com/engine/install/"
 
 if docker compose version >/dev/null 2>&1; then
     COMPOSE_CMD="docker compose"
 elif command -v docker-compose >/dev/null 2>&1; then
     COMPOSE_CMD="docker-compose"
 else
-    error "Docker Compose is not installed. Please install Docker Compose first."
+    error "Docker Compose не установлен."
 fi
 
-command -v python3 >/dev/null 2>&1 || error "Python 3 is not installed. Please install Python 3."
+command -v python3 >/dev/null 2>&1 || error "Python 3 не установлен."
 
-ok "All dependencies found (docker, ${COMPOSE_CMD}, python3)"
+ok "Зависимости найдены (docker, ${COMPOSE_CMD}, python3)"
 
-# ─── Detect existing installation ─────────────────────────────────────────────
+# ─── Обнаружение существующей установки ──────────────────────────────────────
 UPGRADE=false
 if [ -f "${INSTALL_DIR}/.env" ]; then
-    warn "Existing installation detected in ${INSTALL_DIR}"
-    read -rp "Upgrade (keep existing .env)? [Y/n]: " UPGRADE_CONFIRM
+    warn "Обнаружена существующая установка в ${INSTALL_DIR}"
+    read -rp "Обновить (сохранить текущий .env)? [Y/n]: " UPGRADE_CONFIRM
     UPGRADE_CONFIRM="${UPGRADE_CONFIRM:-Y}"
     if [[ "$UPGRADE_CONFIRM" =~ ^[Yy]$ ]]; then
         UPGRADE=true
-        info "Upgrade mode: will update files but keep existing .env"
+        info "Режим обновления: файлы обновятся, .env сохранится"
     else
-        warn "Proceeding with fresh install (existing .env will be overwritten)"
+        warn "Чистая установка (текущий .env будет перезаписан)"
     fi
 fi
 
-# ─── Interactive configuration ────────────────────────────────────────────────
+# ─── Интерактивная настройка ─────────────────────────────────────────────────
 echo ""
-echo -e "${CYAN}═══ Remnawave Monitoring Setup ═══${NC}"
+echo -e "${CYAN}═══ Remnawave Monitoring — Установка ═══${NC}"
 echo ""
 
 INSTALL_WHITEBOX=false
@@ -81,16 +81,15 @@ if [ "$UPGRADE" = false ]; then
         warn "URL не может быть пустым"
         read -rp "URL панели Remnawave: " PANEL_URL
     done
-    # Убрать trailing slash и добавить /api/nodes
     PANEL_URL="${PANEL_URL%/}"
     REMNAWAVE_API_URL="${PANEL_URL}/api/nodes"
 
     while true; do
-        read -rp "Remnawave API Token: " REMNAWAVE_API_TOKEN
+        read -rp "API токен Remnawave: " REMNAWAVE_API_TOKEN
         if [ -n "$REMNAWAVE_API_TOKEN" ]; then
             break
         fi
-        warn "API token cannot be empty"
+        warn "Токен не может быть пустым"
     done
 
     read -rp "Grafana логин [admin]: " INPUT_GRAFANA_USER
@@ -117,30 +116,30 @@ if [ "$UPGRADE" = false ]; then
             ;;
     esac
 
-    # ─── Optional components ─────────────────────────────────────────────────
+    # ─── Дополнительные компоненты ───────────────────────────────────────────
     echo ""
-    echo -e "${CYAN}── Optional components ──${NC}"
+    echo -e "${CYAN}── Дополнительные компоненты ──${NC}"
     echo ""
 
     COMPOSE_PROFILES_LIST=()
 
-    read -rp "Install Whitebox (VPN tunnel probing)? [y/N]: " INPUT_WHITEBOX
+    read -rp "Установить Whitebox (проверка VPN-туннелей)? [y/N]: " INPUT_WHITEBOX
     if [[ "${INPUT_WHITEBOX:-N}" =~ ^[Yy]$ ]]; then
         INSTALL_WHITEBOX=true
         COMPOSE_PROFILES_LIST+=("whitebox")
     fi
 
-    read -rp "Install xray-checker (proxy monitoring)? [y/N]: " INPUT_XRAY_CHECKER
+    read -rp "Установить xray-checker (мониторинг прокси)? [y/N]: " INPUT_XRAY_CHECKER
     if [[ "${INPUT_XRAY_CHECKER:-N}" =~ ^[Yy]$ ]]; then
         INSTALL_XRAY_CHECKER=true
         COMPOSE_PROFILES_LIST+=("xray-checker")
 
         while true; do
-            read -rp "  Subscription URL: " XRAY_CHECKER_SUBSCRIPTION_URL
+            read -rp "  URL подписки: " XRAY_CHECKER_SUBSCRIPTION_URL
             if [ -n "$XRAY_CHECKER_SUBSCRIPTION_URL" ]; then
                 break
             fi
-            warn "Subscription URL cannot be empty"
+            warn "URL подписки не может быть пустым"
         done
 
         echo "  Логин/пароль для метрик xray-checker (внутренний, между Prometheus и xray-checker):"
@@ -151,17 +150,17 @@ if [ "$UPGRADE" = false ]; then
         XRAY_CHECKER_PASSWORD="${INPUT_XRAY_PASS:-changeme}"
     fi
 
-    # Build COMPOSE_PROFILES string
+    # Собрать COMPOSE_PROFILES
     if [ ${#COMPOSE_PROFILES_LIST[@]} -gt 0 ]; then
         COMPOSE_PROFILES=$(IFS=,; echo "${COMPOSE_PROFILES_LIST[*]}")
     fi
 
-    # ─── Confirm ─────────────────────────────────────────────────────────────
+    # ─── Подтверждение ───────────────────────────────────────────────────────
     echo ""
     info "Настройки:"
     echo "  Панель:        ${PANEL_URL}"
     echo "  API URL:       ${REMNAWAVE_API_URL}"
-    echo "  API Token:     ${REMNAWAVE_API_TOKEN:0:20}..."
+    echo "  API токен:     ${REMNAWAVE_API_TOKEN:0:20}..."
     echo "  Grafana:       ${GRAFANA_ADMIN_USER} / ${GRAFANA_ADMIN_PASSWORD}"
     if [ "$INSTALL_WHITEBOX" = true ]; then
         echo "  Whitebox:      включён"
@@ -175,13 +174,13 @@ if [ "$UPGRADE" = false ]; then
     read -rp "Продолжить с этими настройками? [Y/n]: " CONFIRM
     CONFIRM="${CONFIRM:-Y}"
     if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
-        info "Aborted by user"
+        info "Отменено"
         exit 0
     fi
 fi
 
-# ─── Install files ────────────────────────────────────────────────────────────
-info "Installing to ${INSTALL_DIR}..."
+# ─── Установка файлов ────────────────────────────────────────────────────────
+info "Установка в ${INSTALL_DIR}..."
 
 mkdir -p "$INSTALL_DIR"
 mkdir -p "$LOG_DIR"
@@ -190,45 +189,73 @@ download_files() {
     local base="https://raw.githubusercontent.com/alkhilaev/monitoring/${REPO_BRANCH}"
     local files="docker-compose.yml prometheus.yml sync-nodes.py whitebox-sd-config.yml whitebox.yml .env.example setup.sh uninstall.sh rw-monitoring"
     for f in $files; do
-        curl -sSL "${base}/${f}" -o "${INSTALL_DIR}/${f}" || error "Failed to download ${f}"
+        curl -sSL "${base}/${f}" -o "${INSTALL_DIR}/${f}" || error "Не удалось скачать ${f}"
     done
 }
 
 if [ -d "${INSTALL_DIR}/.git" ]; then
-    info "Existing git repo found, pulling latest changes..."
-    git -C "$INSTALL_DIR" pull origin "$REPO_BRANCH" || warn "git pull failed, continuing with existing files"
+    info "Найден git-репозиторий, обновление..."
+    git -C "$INSTALL_DIR" pull origin "$REPO_BRANCH" || warn "git pull не удался, продолжаем с текущими файлами"
 elif command -v git >/dev/null 2>&1; then
-    info "Cloning repository..."
+    info "Клонирование репозитория..."
     git clone --depth 1 --branch "$REPO_BRANCH" "$REPO_URL" "$INSTALL_DIR" 2>/dev/null || {
-        warn "git clone failed, downloading files via curl..."
+        warn "git clone не удался, скачиваем файлы через curl..."
         download_files
     }
 else
-    info "git not found, downloading files via curl..."
+    info "git не найден, скачиваем файлы через curl..."
     download_files
 fi
 
-# ─── Install CLI command ─────────────────────────────────────────────────────
-info "Installing rw-monitoring command..."
+# ─── Установка CLI-команды ───────────────────────────────────────────────────
+info "Установка команды rw-monitoring..."
 cp "${INSTALL_DIR}/rw-monitoring" /usr/local/bin/rw-monitoring
 chmod +x /usr/local/bin/rw-monitoring
-ok "Command 'rw-monitoring' installed"
+ok "Команда rw-monitoring установлена"
 
-# ─── Create .env ──────────────────────────────────────────────────────────────
+# ─── Создание / миграция .env ────────────────────────────────────────────────
+# Вспомогательная функция: прочитать значение из .env, снять кавычки
+env_val() { grep -E "^${1}=" "${INSTALL_DIR}/.env" 2>/dev/null | cut -d= -f2- | sed "s/^['\"]//;s/['\"]$//" || echo "${2:-}"; }
+
 if [ "$UPGRADE" = true ]; then
-    ok "Keeping existing .env file"
-    # Read COMPOSE_PROFILES from existing .env to determine what's enabled
-    # Helper: read value from .env, strip surrounding quotes
-    env_val() { grep -E "^${1}=" "${INSTALL_DIR}/.env" 2>/dev/null | cut -d= -f2- | sed "s/^['\"]//;s/['\"]$//" || echo "${2:-}"; }
+    info "Миграция .env (добавление кавычек для совместимости)..."
+
+    # Прочитать все значения из старого .env
+    REMNAWAVE_API_URL=$(env_val REMNAWAVE_API_URL)
+    REMNAWAVE_API_TOKEN=$(env_val REMNAWAVE_API_TOKEN)
+    GRAFANA_ADMIN_USER=$(env_val GRAFANA_ADMIN_USER admin)
+    GRAFANA_ADMIN_PASSWORD=$(env_val GRAFANA_ADMIN_PASSWORD admin)
     COMPOSE_PROFILES=$(env_val COMPOSE_PROFILES)
+
     if [[ "$COMPOSE_PROFILES" == *"whitebox"* ]]; then INSTALL_WHITEBOX=true; fi
     if [[ "$COMPOSE_PROFILES" == *"xray-checker"* ]]; then
         INSTALL_XRAY_CHECKER=true
         XRAY_CHECKER_USER=$(env_val XRAY_CHECKER_USER admin)
         XRAY_CHECKER_PASSWORD=$(env_val XRAY_CHECKER_PASSWORD changeme)
+        XRAY_CHECKER_SUBSCRIPTION_URL=$(env_val XRAY_CHECKER_SUBSCRIPTION_URL)
     fi
+
+    # Перезаписать .env с кавычками
+    cat > "${INSTALL_DIR}/.env" <<EOF
+REMNAWAVE_API_URL='${REMNAWAVE_API_URL}'
+REMNAWAVE_API_TOKEN='${REMNAWAVE_API_TOKEN}'
+GRAFANA_ADMIN_USER='${GRAFANA_ADMIN_USER}'
+GRAFANA_ADMIN_PASSWORD='${GRAFANA_ADMIN_PASSWORD}'
+COMPOSE_PROFILES='${COMPOSE_PROFILES}'
+EOF
+
+    if [ "$INSTALL_XRAY_CHECKER" = true ]; then
+        cat >> "${INSTALL_DIR}/.env" <<EOF
+XRAY_CHECKER_SUBSCRIPTION_URL='${XRAY_CHECKER_SUBSCRIPTION_URL}'
+XRAY_CHECKER_USER='${XRAY_CHECKER_USER}'
+XRAY_CHECKER_PASSWORD='${XRAY_CHECKER_PASSWORD}'
+EOF
+    fi
+
+    chmod 600 "${INSTALL_DIR}/.env"
+    ok ".env обновлён (настройки сохранены)"
 else
-    info "Creating .env file..."
+    info "Создание .env..."
 
     cat > "${INSTALL_DIR}/.env" <<EOF
 REMNAWAVE_API_URL='${REMNAWAVE_API_URL}'
@@ -247,90 +274,81 @@ EOF
     fi
 
     chmod 600 "${INSTALL_DIR}/.env"
-    ok ".env created with restricted permissions (600)"
+    ok ".env создан (права 600)"
 fi
 
-# ─── Configure prometheus.yml ────────────────────────────────────────────────
-info "Configuring Prometheus scrape jobs..."
+# ─── Настройка prometheus.yml ────────────────────────────────────────────────
+info "Настройка scrape-джобов Prometheus..."
 
 PROM_CFG="${INSTALL_DIR}/prometheus.yml"
 
 if [ "$INSTALL_XRAY_CHECKER" = true ]; then
-    # Uncomment xray-checker block
     sed -i.bak '/job_name.*xray-checker/,/targets.*xray-checker/ s/^#  /  /' "$PROM_CFG"
-    # Replace credential placeholders
     sed -i.bak "s/__XRAY_CHECKER_USER__/${XRAY_CHECKER_USER}/" "$PROM_CFG"
     sed -i.bak "s/__XRAY_CHECKER_PASSWORD__/${XRAY_CHECKER_PASSWORD}/" "$PROM_CFG"
-    ok "xray-checker scrape job enabled in prometheus.yml"
+    ok "xray-checker включён в prometheus.yml"
 fi
 
 if [ "$INSTALL_WHITEBOX" = true ]; then
-    # Uncomment whitebox block
     sed -i.bak '/job_name.*whitebox/,/replacement.*whitebox/ s/^#  /  /' "$PROM_CFG"
-    ok "whitebox scrape job enabled in prometheus.yml"
+    ok "whitebox включён в prometheus.yml"
 fi
 
-# Clean up sed backup files
 rm -f "${PROM_CFG}.bak"
 
-# ─── Create Docker network ───────────────────────────────────────────────────
+# ─── Docker-сеть ─────────────────────────────────────────────────────────────
 if ! docker network inspect remnawave-network >/dev/null 2>&1; then
-    info "Creating Docker network 'remnawave-network'..."
+    info "Создание Docker-сети 'remnawave-network'..."
     docker network create remnawave-network
-    ok "Network created"
+    ok "Сеть создана"
 else
-    ok "Docker network 'remnawave-network' already exists"
+    ok "Docker-сеть 'remnawave-network' уже существует"
 fi
 
-# ─── Create empty vpn-nodes.json if missing ──────────────────────────────────
+# ─── Создание vpn-nodes.json ─────────────────────────────────────────────────
 if [ ! -f "${INSTALL_DIR}/vpn-nodes.json" ]; then
     echo "[]" > "${INSTALL_DIR}/vpn-nodes.json"
 fi
 
-# ─── First sync ──────────────────────────────────────────────────────────────
-info "Running initial node sync..."
+# ─── Первая синхронизация ────────────────────────────────────────────────────
+info "Первая синхронизация нод..."
 cd "$INSTALL_DIR"
 
 if python3 sync-nodes.py 2>&1 | tee -a "${LOG_DIR}/sync-nodes.log"; then
-    ok "Node sync completed"
+    ok "Синхронизация завершена"
 else
-    warn "Node sync failed (will retry via cron). Check: ${LOG_DIR}/sync-nodes.log"
+    warn "Синхронизация не удалась (повторится через cron). Лог: ${LOG_DIR}/sync-nodes.log"
 fi
 
-# ─── Setup cron ───────────────────────────────────────────────────────────────
-info "Setting up cron job (every 10 minutes)..."
+# ─── Настройка cron ──────────────────────────────────────────────────────────
+info "Настройка cron (каждые 10 минут)..."
 
 CRON_LINE="*/10 * * * * cd ${INSTALL_DIR} && /usr/bin/python3 ${INSTALL_DIR}/sync-nodes.py >> ${LOG_DIR}/sync-nodes.log 2>&1 # ${CRON_COMMENT}"
 
-# Remove old cron entry if exists, then add new one
 (crontab -l 2>/dev/null | grep -v "$CRON_COMMENT" || true; echo "$CRON_LINE") | crontab -
-ok "Cron job installed"
+ok "Cron-задача установлена"
 
-# ─── Start Docker stack ──────────────────────────────────────────────────────
-info "Starting Docker Compose stack..."
+# ─── Запуск Docker-стека ─────────────────────────────────────────────────────
+info "Запуск Docker Compose..."
 cd "$INSTALL_DIR"
 $COMPOSE_CMD up -d
 
-ok "Docker stack is running"
+ok "Стек запущен"
 
-# ─── Summary ──────────────────────────────────────────────────────────────────
+# ─── Итого ───────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}═══════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  Remnawave Monitoring installed successfully!${NC}"
+echo -e "${GREEN}  Remnawave Monitoring установлен!${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════${NC}"
 echo ""
-echo "  Prometheus:  http://127.0.0.1:9090"
-echo "  Grafana:     http://127.0.0.1:3100"
-echo "    User:      ${GRAFANA_ADMIN_USER}"
+echo "  Prometheus:    http://127.0.0.1:9090"
+echo "  Grafana:       http://127.0.0.1:3100"
 if [ "$INSTALL_WHITEBOX" = true ]; then
-    echo "  Whitebox:    http://127.0.0.1:9116"
+    echo "  Whitebox:      http://127.0.0.1:9116"
 fi
 if [ "$INSTALL_XRAY_CHECKER" = true ]; then
-    echo "  xray-checker: http://127.0.0.1:2112"
+    echo "  xray-checker:  http://127.0.0.1:2112"
 fi
-echo ""
-echo "  Install dir: ${INSTALL_DIR}"
-echo "  Logs:        ${LOG_DIR}/sync-nodes.log"
 echo ""
 echo "  Управление:   rw-monitoring <команда>"
 echo "    status   — статус сервисов"
