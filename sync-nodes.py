@@ -169,6 +169,7 @@ def main():
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(targets, f, indent=2, ensure_ascii=False)
+        os.chmod(tmp_path, 0o644)
         os.replace(tmp_path, OUTPUT_FILE)
     except Exception:
         os.unlink(tmp_path)

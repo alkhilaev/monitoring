@@ -312,6 +312,7 @@ fi
 if [ ! -f "${INSTALL_DIR}/vpn-nodes.json" ]; then
     echo "[]" > "${INSTALL_DIR}/vpn-nodes.json"
 fi
+chmod 644 "${INSTALL_DIR}/vpn-nodes.json"
 
 # ─── Первая синхронизация ────────────────────────────────────────────────────
 info "Первая синхронизация нод..."
