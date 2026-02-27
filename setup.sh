@@ -143,11 +143,11 @@ if [ "$UPGRADE" = false ]; then
             warn "Subscription URL cannot be empty"
         done
 
-        read -rp "  Metrics username [admin]: " INPUT_XRAY_USER
+        echo "  Логин/пароль для метрик xray-checker (внутренний, между Prometheus и xray-checker):"
+        read -rp "  Логин [admin]: " INPUT_XRAY_USER
         XRAY_CHECKER_USER="${INPUT_XRAY_USER:-admin}"
 
-        read -rsp "  Metrics password [changeme]: " INPUT_XRAY_PASS
-        echo ""
+        read -rp "  Пароль [changeme]: " INPUT_XRAY_PASS
         XRAY_CHECKER_PASSWORD="${INPUT_XRAY_PASS:-changeme}"
     fi
 
@@ -162,17 +162,17 @@ if [ "$UPGRADE" = false ]; then
     echo "  Панель:        ${PANEL_URL}"
     echo "  API URL:       ${REMNAWAVE_API_URL}"
     echo "  API Token:     ${REMNAWAVE_API_TOKEN:0:20}..."
-    echo "  Grafana:       ${GRAFANA_ADMIN_USER} / ********"
+    echo "  Grafana:       ${GRAFANA_ADMIN_USER} / ${GRAFANA_ADMIN_PASSWORD}"
     if [ "$INSTALL_WHITEBOX" = true ]; then
-        echo "  Whitebox:      enabled"
+        echo "  Whitebox:      включён"
     fi
     if [ "$INSTALL_XRAY_CHECKER" = true ]; then
-        echo "  xray-checker:  enabled"
-        echo "    Sub URL:     ${XRAY_CHECKER_SUBSCRIPTION_URL}"
-        echo "    Metrics user: ${XRAY_CHECKER_USER}"
+        echo "  xray-checker:  включён"
+        echo "    Подписка:    ${XRAY_CHECKER_SUBSCRIPTION_URL}"
+        echo "    Метрики:     ${XRAY_CHECKER_USER} / ${XRAY_CHECKER_PASSWORD}"
     fi
     echo ""
-    read -rp "Continue with these settings? [Y/n]: " CONFIRM
+    read -rp "Продолжить с этими настройками? [Y/n]: " CONFIRM
     CONFIRM="${CONFIRM:-Y}"
     if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
         info "Aborted by user"
