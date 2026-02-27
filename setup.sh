@@ -142,12 +142,11 @@ if [ "$UPGRADE" = false ]; then
             warn "URL подписки не может быть пустым"
         done
 
-        echo "  Логин/пароль для метрик xray-checker (внутренний, между Prometheus и xray-checker):"
-        read -rp "  Логин [admin]: " INPUT_XRAY_USER
-        XRAY_CHECKER_USER="${INPUT_XRAY_USER:-admin}"
-
-        read -rp "  Пароль [changeme]: " INPUT_XRAY_PASS
-        XRAY_CHECKER_PASSWORD="${INPUT_XRAY_PASS:-changeme}"
+        XRAY_CHECKER_USER="admin"
+        XRAY_CHECKER_PASSWORD=$(openssl rand -base64 16 | tr -d '=/+' | head -c 16)
+        echo -e "  Метрики xray-checker (внутренний доступ Prometheus):"
+        echo -e "    Логин:  admin"
+        echo -e "    Пароль: ${GREEN}${XRAY_CHECKER_PASSWORD}${NC} (сгенерирован)"
     fi
 
     # Собрать COMPOSE_PROFILES
