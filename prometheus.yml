@@ -1,0 +1,35 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+scrape_configs:
+#  - job_name: 'xray-checker'
+#    scrape_interval: 60s
+#    metrics_path: /metrics
+#    basic_auth:
+#      username: __XRAY_CHECKER_USER__
+#      password: __XRAY_CHECKER_PASSWORD__
+#    static_configs:
+#      - targets: ['xray-checker:2112']
+
+#  - job_name: 'whitebox'
+#    scrape_interval: 180s
+#    metrics_path: /probe
+#    file_sd_configs:
+#      - files: ['/etc/prometheus/whitebox-sd-config.yml']
+#    relabel_configs:
+#      - source_labels: [__address__]
+#        target_label: __param_target
+#      - source_labels: [ctx]
+#        target_label: __param_ctx
+#      - source_labels: [client]
+#        target_label: __param_client
+#      - source_labels: [protocol]
+#        target_label: __param_protocol
+#      - target_label: __address__
+#        replacement: whitebox:9116
+
+  - job_name: 'vpn-nodes'
+    scrape_interval: 30s
+    file_sd_configs:
+      - files: ['/etc/prometheus/vpn-nodes.json']

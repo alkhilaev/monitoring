@@ -1,0 +1,6 @@
+.env
+.DS_Store
+.idea/
+vpn-nodes.json
+__pycache__/
+*.pyc

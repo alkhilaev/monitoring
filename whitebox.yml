@@ -1,0 +1,8 @@
+scopes:
+  default:
+    timeout: 5s
+    http:
+      max_redirects: 5
+      method: GET
+      headers:
+        User-Agent: "whitebox/1.0.0"

@@ -1,0 +1,14 @@
+# Whitebox service discovery config
+# Добавляй таргеты в формате:
+#
+# - targets: ["https://google.com"]
+#   labels:
+#     ctx: "vless://uuid@IP:443?flow=xtls-rprx-vision&type=tcp&security=reality&..."
+#     client: "unique-name"
+#     protocol: "vless"
+
+- targets: ["https://google.com"]
+  labels:
+    ctx: "ВСТАВЬ_VLESS_URI_СЮДА"
+    client: "nl-socnet-basic-1"
+    protocol: "vless"

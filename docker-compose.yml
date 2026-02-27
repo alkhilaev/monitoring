@@ -1,0 +1,93 @@
+services:
+  whitebox:
+    image: rxyvea/whitebox:latest
+    container_name: whitebox
+    hostname: whitebox
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:9116:9116'
+    volumes:
+      - ./whitebox.yml:/app/whitebox.yml
+    command: ["-config", "/app/whitebox.yml"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9116/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - remnawave-network
+    profiles:
+      - whitebox
+
+  xray-checker:
+    image: kutovoys/xray-checker:latest
+    container_name: xray-checker
+    hostname: xray-checker
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:2112:2112'
+    environment:
+      - SUBSCRIPTION_URL=${XRAY_CHECKER_SUBSCRIPTION_URL}
+      - METRICS_PROTECTED=true
+      - METRICS_USERNAME=${XRAY_CHECKER_USER:-admin}
+      - METRICS_PASSWORD=${XRAY_CHECKER_PASSWORD:-changeme}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:2112/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - remnawave-network
+    profiles:
+      - xray-checker
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    hostname: prometheus
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:9090:9090'
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./whitebox-sd-config.yml:/etc/prometheus/whitebox-sd-config.yml
+      - ./vpn-nodes.json:/etc/prometheus/vpn-nodes.json
+      - prometheus-data:/prometheus
+    networks:
+      - remnawave-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=90d' # 90 дней
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    hostname: grafana
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:3100:3000'
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-changeme}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - remnawave-network
+
+volumes:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  remnawave-network:
+    external: true
