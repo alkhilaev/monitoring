@@ -15,6 +15,8 @@ scrape_configs:
 #  - job_name: 'whitebox'
 #    scrape_interval: 180s
 #    metrics_path: /probe
+#    params:
+#      timeout_ms: ['5000']
 #    file_sd_configs:
 #      - files: ['/etc/prometheus/whitebox-sd-config.yml']
 #    relabel_configs:
@@ -23,9 +25,11 @@ scrape_configs:
 #      - source_labels: [ctx]
 #        target_label: __param_ctx
 #      - source_labels: [client]
-#        target_label: __param_client
+#        target_label: client
 #      - source_labels: [protocol]
-#        target_label: __param_protocol
+#        target_label: protocol
+#      - source_labels: [__param_target]
+#        target_label: target
 #      - target_label: __address__
 #        replacement: whitebox:9116
 
