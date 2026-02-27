@@ -76,11 +76,14 @@ INSTALL_XRAY_CHECKER=false
 COMPOSE_PROFILES=""
 
 if [ "$UPGRADE" = false ]; then
-    read -rp "Remnawave API URL (e.g. https://your-panel.com/api/nodes): " REMNAWAVE_API_URL
-    while [ -z "$REMNAWAVE_API_URL" ]; do
-        warn "API URL cannot be empty"
-        read -rp "Remnawave API URL: " REMNAWAVE_API_URL
+    read -rp "URL панели Remnawave (например https://panel.example.com): " PANEL_URL
+    while [ -z "$PANEL_URL" ]; do
+        warn "URL не может быть пустым"
+        read -rp "URL панели Remnawave: " PANEL_URL
     done
+    # Убрать trailing slash и добавить /api/nodes
+    PANEL_URL="${PANEL_URL%/}"
+    REMNAWAVE_API_URL="${PANEL_URL}/api/nodes"
 
     while true; do
         read -rp "Remnawave API Token: " REMNAWAVE_API_TOKEN
@@ -90,17 +93,29 @@ if [ "$UPGRADE" = false ]; then
         warn "API token cannot be empty"
     done
 
-    read -rp "Grafana admin username [admin]: " INPUT_GRAFANA_USER
+    read -rp "Grafana логин [admin]: " INPUT_GRAFANA_USER
     GRAFANA_ADMIN_USER="${INPUT_GRAFANA_USER:-admin}"
 
-    while true; do
-        read -rsp "Grafana admin password: " GRAFANA_ADMIN_PASSWORD
-        echo ""
-        if [ -n "$GRAFANA_ADMIN_PASSWORD" ]; then
-            break
-        fi
-        warn "Password cannot be empty"
-    done
+    echo "Grafana пароль:"
+    echo "  1) Ввести свой"
+    echo "  2) Сгенерировать случайный"
+    echo "  3) Оставить по умолчанию (admin)"
+    read -rp "Выбор [1/2/3]: " PASS_CHOICE
+    case "${PASS_CHOICE:-1}" in
+        2)
+            GRAFANA_ADMIN_PASSWORD=$(openssl rand -base64 16 | tr -d '=/+' | head -c 16)
+            echo -e "  Сгенерированный пароль: ${GREEN}${GRAFANA_ADMIN_PASSWORD}${NC}"
+            echo "  (сохраните его!)"
+            ;;
+        3)
+            GRAFANA_ADMIN_PASSWORD="admin"
+            ;;
+        *)
+            read -rsp "  Введите пароль: " GRAFANA_ADMIN_PASSWORD
+            echo ""
+            GRAFANA_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD:-admin}"
+            ;;
+    esac
 
     # ─── Optional components ─────────────────────────────────────────────────
     echo ""
@@ -143,11 +158,11 @@ if [ "$UPGRADE" = false ]; then
 
     # ─── Confirm ─────────────────────────────────────────────────────────────
     echo ""
-    info "Configuration:"
+    info "Настройки:"
+    echo "  Панель:        ${PANEL_URL}"
     echo "  API URL:       ${REMNAWAVE_API_URL}"
     echo "  API Token:     ${REMNAWAVE_API_TOKEN:0:20}..."
-    echo "  Grafana User:  ${GRAFANA_ADMIN_USER}"
-    echo "  Grafana Pass:  ********"
+    echo "  Grafana:       ${GRAFANA_ADMIN_USER} / ********"
     if [ "$INSTALL_WHITEBOX" = true ]; then
         echo "  Whitebox:      enabled"
     fi
