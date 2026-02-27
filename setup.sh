@@ -186,10 +186,14 @@ mkdir -p "$LOG_DIR"
 
 download_files() {
     local base="https://raw.githubusercontent.com/alkhilaev/monitoring/${REPO_BRANCH}"
-    local files="docker-compose.yml prometheus.yml sync-nodes.py whitebox-sd-config.yml whitebox.yml .env.example setup.sh uninstall.sh rw-monitoring"
+    local files="docker-compose.yml prometheus.yml sync-nodes.py whitebox-sd-config.yml whitebox.yml .env.example setup.sh uninstall.sh rw-monitoring dashboard-nodes-infrastructure-ru.json"
     for f in $files; do
         curl -sSL "${base}/${f}" -o "${INSTALL_DIR}/${f}" || error "Не удалось скачать ${f}"
     done
+    # Provisioning конфиги Grafana
+    mkdir -p "${INSTALL_DIR}/provisioning/datasources" "${INSTALL_DIR}/provisioning/dashboards"
+    curl -sSL "${base}/provisioning/datasources/prometheus.yml" -o "${INSTALL_DIR}/provisioning/datasources/prometheus.yml"
+    curl -sSL "${base}/provisioning/dashboards/dashboards.yml" -o "${INSTALL_DIR}/provisioning/dashboards/dashboards.yml"
 }
 
 if [ -d "${INSTALL_DIR}/.git" ]; then

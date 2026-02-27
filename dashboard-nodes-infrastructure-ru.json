@@ -1,0 +1,428 @@
+{
+  "title": "Инфраструктура VPN-нод",
+  "tags": ["vpn", "nodes", "infrastructure"],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 7,
+      "title": "Характеристики нод",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "count by(node, ip, provider) (node_cpu_seconds_total{mode=\"idle\", job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"})",
+          "legendFormat": "",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "expr": "node_memory_MemTotal_bytes{job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}",
+          "legendFormat": "",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "expr": "(1 - node_filesystem_avail_bytes{job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\", mountpoint=\"/\", fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\", mountpoint=\"/\", fstype!~\"tmpfs|overlay\"}) * 100",
+          "legendFormat": "",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "expr": "node_filesystem_size_bytes{job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\", mountpoint=\"/\", fstype!~\"tmpfs|overlay\"}",
+          "legendFormat": "",
+          "format": "table",
+          "instant": true,
+          "refId": "G"
+        },
+        {
+          "expr": "node_os_info{job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}",
+          "legendFormat": "",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "expr": "node_netstat_Tcp_CurrEstab{job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}",
+          "legendFormat": "",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "expr": "node_time_seconds{job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"} - node_boot_time_seconds{job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}",
+          "legendFormat": "",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "seriesToColumns",
+          "options": {
+            "byField": "node"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time 1": true, "Time 2": true, "Time 3": true, "Time 4": true, "Time 5": true, "Time 6": true, "Time 7": true, "Time": true,
+              "__name__": true, "__name__ 1": true, "__name__ 2": true, "__name__ 3": true, "__name__ 4": true, "__name__ 5": true, "__name__ 6": true, "__name__ 7": true,
+              "device": true, "device 1": true, "device 2": true, "device 3": true,
+              "instance": true, "instance 1": true, "instance 2": true, "instance 3": true, "instance 4": true, "instance 5": true, "instance 6": true,
+              "job": true, "job 1": true, "job 2": true, "job 3": true, "job 4": true, "job 5": true, "job 6": true,
+              "location": true, "location 1": true, "location 2": true, "location 3": true, "location 4": true, "location 5": true, "location 6": true,
+              "provider 2": true, "provider 3": true, "provider 4": true, "provider 5": true, "provider 6": true, "provider 7": true,
+              "ip 2": true, "ip 3": true, "ip 4": true, "ip 5": true, "ip 6": true, "ip 7": true,
+              "country_code": true, "country_code 1": true, "country_code 2": true, "country_code 3": true, "country_code 4": true, "country_code 5": true, "country_code 6": true,
+              "mountpoint": true, "fstype": true, "fstype 1": true, "mountpoint 1": true, "fstype 2": true, "mountpoint 2": true,
+              "domainname": true, "machine": true, "nodename": true, "sysname": true, "release": true, "version": true,
+              "build_id": true, "id": true, "id_like": true, "image_id": true, "image_version": true, "name": true,
+              "variant": true, "variant_id": true, "version_codename": true, "version_id": true,
+              "Value #D": true
+            },
+            "indexByName": {
+              "node": 0,
+              "ip 1": 1,
+              "provider 1": 2,
+              "Value #A": 3,
+              "Value #B": 4,
+              "Value #G": 5,
+              "Value #C": 6,
+              "pretty_name": 7,
+              "Value #E": 8,
+              "Value #F": 9
+            },
+            "renameByName": {
+              "node": "Нода",
+              "ip 1": "IP",
+              "provider 1": "Провайдер",
+              "Value #A": "ЦП",
+              "Value #B": "ОЗУ",
+              "Value #G": "Диск",
+              "Value #C": "Занято",
+              "pretty_name": "ОС",
+              "Value #E": "TCP соед.",
+              "Value #F": "Аптайм"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "ОЗУ" },
+            "properties": [ { "id": "unit", "value": "bytes" } ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Занято" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "decimals", "value": 1 },
+              { "id": "min", "value": 0 },
+              { "id": "max", "value": 100 },
+              { "id": "custom.cellOptions", "value": { "type": "gauge", "mode": "basic", "valueDisplayMode": "text" } },
+              { "id": "custom.width", "value": 150 },
+              { "id": "thresholds", "value": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 70 },
+                  { "color": "orange", "value": 80 },
+                  { "color": "red", "value": 90 }
+                ]
+              }}
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Диск" },
+            "properties": [ { "id": "unit", "value": "bytes" } ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "ЦП" },
+            "properties": [
+              { "id": "unit", "value": "none" },
+              { "id": "decimals", "value": 0 },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "light-blue" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "TCP соед." },
+            "properties": [
+              { "id": "unit", "value": "none" },
+              { "id": "decimals", "value": 0 },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "light-purple" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Аптайм" },
+            "properties": [ { "id": "unit", "value": "s" } ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "IP" },
+            "properties": [ { "id": "custom.width", "value": 130 } ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Провайдер" },
+            "properties": [ { "id": "custom.width", "value": 110 } ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "ОС" },
+            "properties": [ { "id": "custom.width", "value": 170 } ]
+          }
+        ],
+        "defaults": {
+          "custom": { "align": "center" }
+        }
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [ { "displayName": "Нода", "desc": false } ]
+      }
+    },
+    {
+      "id": 1,
+      "title": "Сетевой трафик (⬇ входящий / ⬆ исходящий)",
+      "type": "timeseries",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum by(node) (rate(node_network_receive_bytes_total{device!~\"lo|docker.*|veth.*|br-.*\", job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}[5m]) * 8) > 0",
+          "legendFormat": "⬇ вход {{node}}",
+          "refId": "A"
+        },
+        {
+          "expr": "-sum by(node) (rate(node_network_transmit_bytes_total{device!~\"lo|docker.*|veth.*|br-.*\", job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}[5m]) * 8) < 0",
+          "legendFormat": "⬆ исход {{node}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "showPoints": "never",
+            "axisPlacement": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["mean", "max", "lastNotNull"]
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Сводка трафика (по нодам)",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum by(node) (increase(node_network_receive_bytes_total{device!~\"lo|docker.*|veth.*|br-.*\", job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}[$__range]))",
+          "format": "table", "instant": true, "refId": "A"
+        },
+        {
+          "expr": "sum by(node) (increase(node_network_transmit_bytes_total{device!~\"lo|docker.*|veth.*|br-.*\", job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}[$__range]))",
+          "format": "table", "instant": true, "refId": "B"
+        },
+        {
+          "expr": "sum by(node) (increase(node_network_receive_bytes_total{device!~\"lo|docker.*|veth.*|br-.*\", job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}[$__range]) + increase(node_network_transmit_bytes_total{device!~\"lo|docker.*|veth.*|br-.*\", job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}[$__range]))",
+          "format": "table", "instant": true, "refId": "C"
+        },
+        {
+          "expr": "sum by(node) (rate(node_network_receive_bytes_total{device!~\"lo|docker.*|veth.*|br-.*\", job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}[5m]) * 8)",
+          "format": "table", "instant": true, "refId": "D"
+        },
+        {
+          "expr": "sum by(node) (rate(node_network_transmit_bytes_total{device!~\"lo|docker.*|veth.*|br-.*\", job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}[5m]) * 8)",
+          "format": "table", "instant": true, "refId": "E"
+        }
+      ],
+      "transformations": [
+        { "id": "seriesToColumns", "options": { "byField": "node" } },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time 1": true, "Time 2": true, "Time 3": true, "Time 4": true, "Time 5": true, "Time": true
+            },
+            "indexByName": { "node": 0, "Value #A": 1, "Value #B": 2, "Value #C": 3, "Value #D": 4, "Value #E": 5 },
+            "renameByName": {
+              "node": "Нода",
+              "Value #A": "⬇ Получено",
+              "Value #B": "⬆ Отправлено",
+              "Value #C": "Всего",
+              "Value #D": "⬇ Скорость",
+              "Value #E": "⬆ Скорость"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "⬇ Получено" },
+            "properties": [
+              { "id": "unit", "value": "bytes" },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "light-blue" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "⬆ Отправлено" },
+            "properties": [
+              { "id": "unit", "value": "bytes" },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "light-orange" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Всего" },
+            "properties": [
+              { "id": "unit", "value": "bytes" },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "light-green" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "⬇ Скорость" },
+            "properties": [ { "id": "unit", "value": "bps" } ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "⬆ Скорость" },
+            "properties": [ { "id": "unit", "value": "bps" } ]
+          }
+        ],
+        "defaults": { "custom": { "align": "center" } }
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [ { "displayName": "Всего", "desc": true } ],
+        "footer": {
+          "show": true,
+          "reducer": ["sum"],
+          "fields": ["⬇ Получено", "⬆ Отправлено", "Всего", "⬇ Скорость", "⬆ Скорость"]
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Загрузка ЦП %",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "100 - (avg by(node) (rate(node_cpu_seconds_total{mode=\"idle\", job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}[5m])) * 100)",
+          "legendFormat": "{{node}}", "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "max": 100, "min": 0,
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20 }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Использование ОЗУ %",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "(1 - node_memory_MemAvailable_bytes{job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"} / node_memory_MemTotal_bytes{job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}) * 100",
+          "legendFormat": "{{node}}", "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "max": 100, "min": 0,
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20 }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Нагрузка системы (Load Average 1 мин)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 36 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "node_load1{job=\"vpn-nodes\", provider=~\"$provider\", node=~\"$node\"}",
+          "legendFormat": "{{node}}", "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 }
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "provider",
+        "type": "query",
+        "label": "Провайдер",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "definition": "label_values(node_uname_info{job=\"vpn-nodes\"}, provider)",
+        "query": "label_values(node_uname_info{job=\"vpn-nodes\"}, provider)",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": { "selected": true, "text": "Все", "value": "$__all" },
+        "refresh": 2,
+        "sort": 1
+      },
+      {
+        "name": "node",
+        "type": "query",
+        "label": "Нода",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "definition": "label_values(node_uname_info{job=\"vpn-nodes\", provider=~\"$provider\"}, node)",
+        "query": "label_values(node_uname_info{job=\"vpn-nodes\", provider=~\"$provider\"}, node)",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": { "selected": true, "text": "Все", "value": "$__all" },
+        "refresh": 2,
+        "sort": 1
+      }
+    ]
+  },
+  "annotations": { "list": [] },
+  "schemaVersion": 39,
+  "__inputs": [
+    { "name": "DS_PROMETHEUS", "label": "Prometheus", "type": "datasource", "pluginId": "prometheus" }
+  ],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "11.0.0" },
+    { "type": "datasource", "id": "prometheus", "name": "Prometheus" }
+  ]
+}
