@@ -134,19 +134,25 @@ if [ "$UPGRADE" = false ]; then
         INSTALL_XRAY_CHECKER=true
         COMPOSE_PROFILES_LIST+=("xray-checker")
 
-        while true; do
-            read -rp "  URL подписки: " XRAY_CHECKER_SUBSCRIPTION_URL
-            if [ -n "$XRAY_CHECKER_SUBSCRIPTION_URL" ]; then
-                break
-            fi
-            warn "URL подписки не может быть пустым"
-        done
-
         XRAY_CHECKER_USER="admin"
         XRAY_CHECKER_PASSWORD=$(openssl rand -base64 16 | tr -d '=/+' | head -c 16)
         echo -e "  Метрики xray-checker (внутренний доступ Prometheus):"
         echo -e "    Логин:  admin"
         echo -e "    Пароль: ${GREEN}${XRAY_CHECKER_PASSWORD}${NC} (сгенерирован)"
+    fi
+
+    # URL подписки нужен для whitebox и/или xray-checker
+    SUBSCRIPTION_URL=""
+    if [ "$INSTALL_WHITEBOX" = true ] || [ "$INSTALL_XRAY_CHECKER" = true ]; then
+        echo ""
+        info "URL подписки нужен для автоматической настройки таргетов"
+        while true; do
+            read -rp "  URL подписки (subscription): " SUBSCRIPTION_URL
+            if [ -n "$SUBSCRIPTION_URL" ]; then
+                break
+            fi
+            warn "URL подписки не может быть пустым"
+        done
     fi
 
     # Собрать COMPOSE_PROFILES
@@ -161,12 +167,14 @@ if [ "$UPGRADE" = false ]; then
     echo "  API URL:       ${REMNAWAVE_API_URL}"
     echo "  API токен:     ${REMNAWAVE_API_TOKEN:0:20}..."
     echo "  Grafana:       ${GRAFANA_ADMIN_USER} / ${GRAFANA_ADMIN_PASSWORD}"
+    if [ -n "$SUBSCRIPTION_URL" ]; then
+        echo "  Подписка:      ${SUBSCRIPTION_URL:0:50}..."
+    fi
     if [ "$INSTALL_WHITEBOX" = true ]; then
         echo "  Whitebox:      включён"
     fi
     if [ "$INSTALL_XRAY_CHECKER" = true ]; then
         echo "  xray-checker:  включён"
-        echo "    Подписка:    ${XRAY_CHECKER_SUBSCRIPTION_URL}"
         echo "    Метрики:     ${XRAY_CHECKER_USER} / ${XRAY_CHECKER_PASSWORD}"
     fi
     echo ""
@@ -235,8 +243,8 @@ if [ "$UPGRADE" = true ]; then
         INSTALL_XRAY_CHECKER=true
         XRAY_CHECKER_USER=$(env_val XRAY_CHECKER_USER admin)
         XRAY_CHECKER_PASSWORD=$(env_val XRAY_CHECKER_PASSWORD changeme)
-        XRAY_CHECKER_SUBSCRIPTION_URL=$(env_val XRAY_CHECKER_SUBSCRIPTION_URL)
     fi
+    SUBSCRIPTION_URL=$(env_val SUBSCRIPTION_URL "$(env_val XRAY_CHECKER_SUBSCRIPTION_URL)")
 
     # Перезаписать .env с кавычками
     cat > "${INSTALL_DIR}/.env" <<EOF
@@ -245,11 +253,11 @@ REMNAWAVE_API_TOKEN='${REMNAWAVE_API_TOKEN}'
 GRAFANA_ADMIN_USER='${GRAFANA_ADMIN_USER}'
 GRAFANA_ADMIN_PASSWORD='${GRAFANA_ADMIN_PASSWORD}'
 COMPOSE_PROFILES='${COMPOSE_PROFILES}'
+SUBSCRIPTION_URL='${SUBSCRIPTION_URL}'
 EOF
 
     if [ "$INSTALL_XRAY_CHECKER" = true ]; then
         cat >> "${INSTALL_DIR}/.env" <<EOF
-XRAY_CHECKER_SUBSCRIPTION_URL='${XRAY_CHECKER_SUBSCRIPTION_URL}'
 XRAY_CHECKER_USER='${XRAY_CHECKER_USER}'
 XRAY_CHECKER_PASSWORD='${XRAY_CHECKER_PASSWORD}'
 EOF
@@ -266,11 +274,11 @@ REMNAWAVE_API_TOKEN='${REMNAWAVE_API_TOKEN}'
 GRAFANA_ADMIN_USER='${GRAFANA_ADMIN_USER}'
 GRAFANA_ADMIN_PASSWORD='${GRAFANA_ADMIN_PASSWORD}'
 COMPOSE_PROFILES='${COMPOSE_PROFILES}'
+SUBSCRIPTION_URL='${SUBSCRIPTION_URL}'
 EOF
 
     if [ "$INSTALL_XRAY_CHECKER" = true ]; then
         cat >> "${INSTALL_DIR}/.env" <<EOF
-XRAY_CHECKER_SUBSCRIPTION_URL='${XRAY_CHECKER_SUBSCRIPTION_URL}'
 XRAY_CHECKER_USER='${XRAY_CHECKER_USER}'
 XRAY_CHECKER_PASSWORD='${XRAY_CHECKER_PASSWORD}'
 EOF
