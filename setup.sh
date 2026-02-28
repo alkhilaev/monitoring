@@ -194,7 +194,7 @@ mkdir -p "$LOG_DIR"
 
 download_files() {
     local base="https://raw.githubusercontent.com/alkhilaev/monitoring/${REPO_BRANCH}"
-    local files="docker-compose.yml prometheus.yml sync-nodes.py whitebox-sd-config.yml whitebox.yml .env.example setup.sh uninstall.sh rw-monitoring dashboard-nodes-infrastructure-ru.json dashboard-whitebox.json"
+    local files="docker-compose.yml prometheus.yml sync-nodes.py whitebox-sd-config.yml whitebox.yml .env.example setup.sh uninstall.sh rw-monitoring dashboard-nodes-infrastructure-ru.json dashboard-whitebox.json dashboard-xray-checker.json"
     for f in $files; do
         curl -sSL "${base}/${f}" -o "${INSTALL_DIR}/${f}" || error "Не удалось скачать ${f}"
     done

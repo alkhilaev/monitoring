@@ -76,6 +76,7 @@ services:
       - ./provisioning:/etc/grafana/provisioning
       - ./dashboard-nodes-infrastructure-ru.json:/var/lib/grafana/dashboards/nodes-infrastructure.json
       - ./dashboard-whitebox.json:/var/lib/grafana/dashboards/whitebox.json
+      - ./dashboard-xray-checker.json:/var/lib/grafana/dashboards/xray-checker.json
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
       interval: 30s
