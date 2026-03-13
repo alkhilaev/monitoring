@@ -12,7 +12,6 @@ import json
 import os
 import re
 import sys
-import tempfile
 import urllib.request
 import urllib.error
 from datetime import datetime
@@ -232,17 +231,12 @@ def main():
     targets = build_targets(nodes)
     log(f"Generated {len(targets)} active targets (skipped {len(nodes) - len(targets)} disabled)")
 
-    # Atomic write: tmpfile in same dir + os.replace() to avoid Prometheus reading partial JSON
-    output_dir = os.path.dirname(os.path.abspath(OUTPUT_FILE))
-    fd, tmp_path = tempfile.mkstemp(dir=output_dir, suffix=".tmp")
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(targets, f, indent=2, ensure_ascii=False)
-        os.chmod(tmp_path, 0o644)
-        os.replace(tmp_path, OUTPUT_FILE)
-    except Exception:
-        os.unlink(tmp_path)
-        raise
+    # Write in-place to preserve inode (Docker bind mounts track inode)
+    content = json.dumps(targets, indent=2, ensure_ascii=False)
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        f.write(content)
+        f.flush()
+        os.fsync(f.fileno())
 
     log(f"OK: Wrote {OUTPUT_FILE}")
 
@@ -253,16 +247,10 @@ def main():
 
         if uris:
             content = build_whitebox_targets(uris)
-            wb_dir = os.path.dirname(os.path.abspath(WHITEBOX_SD_FILE))
-            fd, tmp_path = tempfile.mkstemp(dir=wb_dir, suffix=".tmp")
-            try:
-                with os.fdopen(fd, "w", encoding="utf-8") as f:
-                    f.write(content)
-                os.chmod(tmp_path, 0o644)
-                os.replace(tmp_path, WHITEBOX_SD_FILE)
-            except Exception:
-                os.unlink(tmp_path)
-                raise
+            with open(WHITEBOX_SD_FILE, "w", encoding="utf-8") as f:
+                f.write(content)
+                f.flush()
+                os.fsync(f.fileno())
             log(f"OK: Wrote {WHITEBOX_SD_FILE} ({len(uris)} targets)")
 
 
